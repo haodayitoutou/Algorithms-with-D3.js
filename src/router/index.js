@@ -4,6 +4,9 @@ import Router from 'vue-router'
 import Home from '../views/Home'
 import MainHome from '../views/main/Home'
 
+import FundamentalsHome from '../views/fundamentals/Home'
+import Fundamentals from './fundamentals'
+
 Vue.use(Router)
 
 export default new Router({
@@ -15,6 +18,11 @@ export default new Router({
                 {
                     path: '',
                     component: MainHome,
+                },
+                {
+                    path: 'fundamentals',
+                    component: FundamentalsHome,
+                    children: Fundamentals,
                 },
             ],
         },
