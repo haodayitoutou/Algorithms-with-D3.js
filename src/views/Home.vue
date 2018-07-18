@@ -6,6 +6,13 @@
                 :default-active="$route.path"
                 :router="true"
             >
+                <el-menu-item
+                    class="menu-main"
+                    :index='"Main"'
+                    :route='"/"'
+                >
+                    Overview
+                </el-menu-item>
                 <el-menu-item-group
                     v-for="(item, i) in navigator"
                     :key="i"
@@ -57,12 +64,24 @@ export default {
     bottom: 0;
     width: 220px;
     margin-top: 80px;
+    border-right: solid 1px #e6e6e6;
+    .el-menu {
+        border-right: none;
+    }
     .el-menu-item {
         display: block;
         height: 40px;
         line-height: 40px;
         overflow: hidden;
         color: #444;
+    }
+    .menu-main {
+        height: 40px;
+        margin-top: 20px;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 40px;
+        color: #333;
     }
 }
 .content {

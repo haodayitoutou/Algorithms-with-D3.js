@@ -38,6 +38,8 @@ const STROKE_WIDTH = 2
 const DURATION = 800
 const TEXT_DY = '1.3em'
 
+// space between two items
+const GAP_WIDTH = RECT_HEIGHT / 2
 // stack left/right border
 const BOUNDARY1 = SVG_WIDTH / 4 - CONTAINER_WIDTH / 2
 const BOUNDARY2 = SVG_WIDTH / 4 + CONTAINER_WIDTH / 2
@@ -50,7 +52,7 @@ const LEFT_STACK = SVG_WIDTH / 4 - RECT_WIDTH / 2
 const LEFT_QUEUE = SVG_WIDTH * 3 / 4 - RECT_WIDTH / 2
 
 function getOffset (n) {
-    const offset = CONTAINER_HEIGHT - n * RECT_HEIGHT - (n - 1) * RECT_HEIGHT / 2 - STROKE_WIDTH
+    const offset = CONTAINER_HEIGHT - n * RECT_HEIGHT - (n - 1) * GAP_WIDTH - STROKE_WIDTH
     return offset
 }
 function flattenLinkedList (head) {
@@ -119,19 +121,19 @@ export default {
 
             this.stackHeadText = labels.append('text') // stack head
                 .text('head')
-                .attr('x', BOUNDARY1 - 80)
-                .attr('y', TOP - STROKE_WIDTH * 2)
+                .attr('x', BOUNDARY1 - 70)
+                .attr('y', TOP - STROKE_WIDTH)
                 .attr('dy', TEXT_DY)
 
             this.queueHeadText = labels.append('text') // queue head
                 .text('head')
-                .attr('x', BOUNDARY3 - 80)
-                .attr('y', TOP - STROKE_WIDTH * 2)
+                .attr('x', BOUNDARY3 - 70)
+                .attr('y', TOP - STROKE_WIDTH)
                 .attr('dy', TEXT_DY)
             this.queueTailText = labels.append('text') // queue tail
                 .text('tail')
                 .attr('x', BOUNDARY4 + 5)
-                .attr('y', TOP - STROKE_WIDTH * 2)
+                .attr('y', TOP - STROKE_WIDTH)
                 .attr('dy', TEXT_DY)
         },
         draw () {
@@ -145,77 +147,80 @@ export default {
             let stack = svg.selectAll('g.stack')
                 .data(stacks, (d) => { return d.value })
 
-            let transition = d3.transition().duration(DURATION)
+            let transition = d3.transition().duration(DURATION) // define a transition
 
             let stackEnter = stack.enter()
                 .append('g')
                 .attr('class', 'stack')
 
-            stackEnter.append('rect')
+            stackEnter.append('rect') // draw a rectangle
                 .attr('x', LEFT_STACK)
                 .attr('y', TOP)
                 .attr('width', RECT_WIDTH)
                 .attr('height', RECT_HEIGHT)
 
-            stackEnter.append('line')
+            stackEnter.append('line') // draw a line, divide the rectangle into 2 parts
                 .attr('class', 'vline')
-                .attr('x1', LEFT_STACK + RECT_WIDTH / 2)
-                .attr('x2', LEFT_STACK + RECT_WIDTH / 2)
+                .attr('x1', SVG_WIDTH / 4)
+                .attr('x2', SVG_WIDTH / 4)
                 .attr('y1', TOP)
                 .attr('y2', TOP + RECT_HEIGHT)
 
-            stackEnter.append('text')
+            stackEnter.append('text') // add text in left part
                 .attr('x', LEFT_STACK)
                 .attr('y', TOP)
                 .attr('dx', 5)
                 .attr('dy', TEXT_DY)
                 .text((d) => { return d.value })
 
-            stackEnter.append('text')
-                .attr('x', LEFT_STACK + RECT_WIDTH / 2)
+            stackEnter.append('text') // add text in right part
+                .attr('x', SVG_WIDTH / 4)
                 .attr('y', TOP)
                 .attr('dx', 10)
                 .attr('dy', TEXT_DY)
                 .text('next')
 
-            stackEnter.selectAll('text, rect, line.vline')
+            stackEnter.selectAll('text, rect, line.vline') // transform newly-added items to the right position
                 .transition(transition)
                 .attr('transform', `translate(0, ${getOffset(this.stackCount)})`)
 
-            // y coordinate for center point of link line
-            // stackCount has been increased by 1
-            let yEnter = TOP + getOffset(this.stackCount - 1) - RECT_HEIGHT * 0.25
-            stackEnter.filter(() => { return this.stackCount > 1 })
+            // Draw a link above the last item
+            // First find y coordinate for center point of link line
+            // Note, at this time stackCount has been increased by 1
+            let yEnter = TOP + getOffset(this.stackCount - 1) - RECT_HEIGHT * 0.25 // center of the gap
+            stackEnter.filter(() => { return this.stackCount > 1 }) // no link for the first item (when stackCount = 1)
                 .append('line')
                 .attr('class', 'link')
-                .attr('x1', LEFT_STACK + RECT_WIDTH / 2)
-                .attr('x2', LEFT_STACK + RECT_WIDTH / 2)
+                .attr('x1', SVG_WIDTH / 4)
+                .attr('x2', SVG_WIDTH / 4)
                 .attr('y1', yEnter)
                 .attr('y2', yEnter)
-                .transition(transition)
+                .transition(transition) // stretch the link to its final position
                 .attr('x1', LEFT_STACK + RECT_WIDTH * 3 / 4)
                 .attr('x2', LEFT_STACK + RECT_WIDTH / 4)
                 .attr('y1', yEnter - RECT_HEIGHT * 0.25)
                 .attr('y2', yEnter + RECT_HEIGHT * 0.25)
 
-            let stackExit = stack.exit()
+            let stackExit = stack.exit() // remove the last item
             stackExit.selectAll('text, rect, line.vline')
                 .transition(transition)
                 .attr('transform', 'translate(0, -42)')
 
-            // y coordinate for center point of link line
-            // stackCount has been decreased by 1
-            let yExit = TOP + getOffset(this.stackCount) - RECT_HEIGHT * 0.25
+            // Fold the last link
+            // First find y coordinate for center point of link line
+            // Note, at this time stackCount has been decreased by 1
+            let yExit = TOP + getOffset(this.stackCount) - RECT_HEIGHT * 0.25 // center of the gap
             stackExit.selectAll('line.link')
                 .transition(transition)
-                .attr('x1', LEFT_STACK + RECT_WIDTH / 2)
-                .attr('x2', LEFT_STACK + RECT_WIDTH / 2)
+                .attr('x1', SVG_WIDTH / 4)
+                .attr('x2', SVG_WIDTH / 4)
                 .attr('y1', yExit)
                 .attr('y2', yExit)
 
             stackExit.transition(transition)
                 .remove()
 
+            // Adjust the position of head text
             let posY = 0
             let text = 'head'
             if (this.stackCount > 0) {
@@ -234,26 +239,26 @@ export default {
             let queue = svg.selectAll('g.queue')
                 .data(queues, (d) => { return d.value })
 
-            let transition = d3.transition().duration(DURATION)
+            let transition = d3.transition().duration(DURATION) // define a transition
 
             let queueEnter = queue.enter()
                 .append('g')
                 .attr('class', 'queue')
 
-            queueEnter.append('rect')
+            queueEnter.append('rect') // draw a rectangle
                 .attr('x', LEFT_QUEUE)
                 .attr('y', TOP)
                 .attr('width', RECT_WIDTH)
                 .attr('height', RECT_HEIGHT)
 
-            queueEnter.append('line')
+            queueEnter.append('line') // draw a line, divide the rectangle into 2 parts
                 .attr('class', 'vline')
-                .attr('x1', LEFT_QUEUE + RECT_WIDTH / 2)
-                .attr('x2', LEFT_QUEUE + RECT_WIDTH / 2)
+                .attr('x1', SVG_WIDTH * 3 / 4)
+                .attr('x2', SVG_WIDTH * 3 / 4)
                 .attr('y1', TOP)
                 .attr('y2', TOP + RECT_HEIGHT)
 
-            queueEnter.append('text')
+            queueEnter.append('text') // add text in left part
                 .attr('class', 'valueText')
                 .attr('x', LEFT_QUEUE)
                 .attr('y', TOP)
@@ -261,44 +266,33 @@ export default {
                 .attr('dy', TEXT_DY)
                 .text((d) => { return d.value })
 
-            queueEnter.append('text')
+            queueEnter.append('text') // add text in right part
                 .attr('class', 'nextText')
-                .attr('x', LEFT_QUEUE + RECT_WIDTH / 2)
+                .attr('x', SVG_WIDTH * 3 / 4)
                 .attr('y', TOP)
                 .attr('dx', 10)
                 .attr('dy', TEXT_DY)
                 .text('next')
 
-            // create a link for the next coming element, but set it invisible (x1 = x2, y1 = y2)
-            let yEnter = TOP + getOffset(this.stackCount) - RECT_HEIGHT * 0.25
+            // Draw a link for the next coming element, but set it invisible (x1 = x2, y1 = y2)
+            let yEnter = TOP + getOffset(this.stackCount) - RECT_HEIGHT * 0.25 // center of the gap
             queueEnter.append('line')
                 .attr('class', 'link')
-                .attr('x1', LEFT_QUEUE + RECT_WIDTH / 2)
-                .attr('x2', LEFT_QUEUE + RECT_WIDTH / 2)
+                .attr('x1', SVG_WIDTH * 3 / 4)
+                .attr('x2', SVG_WIDTH * 3 / 4)
                 .attr('y1', yEnter)
                 .attr('y2', yEnter)
 
+            // Re-position all items based on the latest data
             let queueUpdate = queueEnter.merge(queue)
-            queueUpdate.select('rect')
-                .transition(transition)
-                .attr('transform', (d, i) => {
-                    return `translate(0, ${getOffset(i + 1)})`
-                })
-            queueUpdate.select('line.vline')
-                .transition(transition)
-                .attr('transform', (d, i) => {
-                    return `translate(0, ${getOffset(i + 1)})`
-                })
-            queueUpdate.select('text.valueText')
-                .transition(transition)
-                .attr('transform', (d, i) => {
-                    return `translate(0, ${getOffset(i + 1)})`
-                })
-            queueUpdate.select('text.nextText')
-                .transition(transition)
-                .attr('transform', (d, i) => {
-                    return `translate(0, ${getOffset(i + 1)})`
-                })
+            let elements = ['rect', 'line.vline', 'text.valueText', 'text.nextText']
+            Object.values(elements).forEach((val) => {
+                queueUpdate.select(val)
+                    .transition(transition)
+                    .attr('transform', (d, i) => {
+                        return `translate(0, ${getOffset(i + 1)})`
+                    })
+            })
             // set the links visible except for the last element (which doesn't have a next element)
             queueUpdate.filter((d) => { return d.next !== null }) // exclude the last element
                 .select('line.link')
@@ -306,7 +300,7 @@ export default {
                 .attr('x1', LEFT_QUEUE + RECT_WIDTH / 4)
                 .attr('x2', LEFT_QUEUE + RECT_WIDTH * 3 / 4)
                 .attr('y1', (d, i) => {
-                    return TOP + getOffset(i + 1) - RECT_HEIGHT * 0.5
+                    return TOP + getOffset(i + 1) - GAP_WIDTH
                 })
                 .attr('y2', (d, i) => {
                     return TOP + getOffset(i + 1)
@@ -321,14 +315,14 @@ export default {
             let queueExit = queue.exit()
             queueExit.selectAll('text, rect, line.vline')
                 .transition(transition)
-                .attr('transform', `translate(0, ${CONTAINER_HEIGHT + RECT_HEIGHT * 0.5 + STROKE_WIDTH})`)
+                .attr('transform', `translate(0, ${CONTAINER_HEIGHT + GAP_WIDTH})`)
                 .remove()
 
             let yExit = TOP + CONTAINER_HEIGHT + RECT_HEIGHT * 0.25
             queueExit.select('line.link')
                 .transition(transition)
-                .attr('x1', LEFT_QUEUE + RECT_WIDTH / 2)
-                .attr('x2', LEFT_QUEUE + RECT_WIDTH / 2)
+                .attr('x1', SVG_WIDTH * 3 / 4)
+                .attr('x2', SVG_WIDTH * 3 / 4)
                 .attr('y1', yExit)
                 .attr('y2', yExit)
                 .remove()
@@ -336,6 +330,7 @@ export default {
             queueExit.transition(transition)
                 .remove()
 
+            // Adjust the position of head/tail text
             let headText = 'head--'
             let headPosY = 0
             let tailText = '--tail'
@@ -368,9 +363,8 @@ export default {
             // queue
             this.queueCount += 1
             let oldQueueTail = this.queueTail
-            let number = this.queueCount.toString() // only use the last digit
             this.queueTail = {
-                value: `queue ${number[number.length - 1]}`,
+                value: `queue ${this.queueCount % 10}`, // only use the last digit
                 next: null,
             }
             if (!this.queueHead) {
@@ -379,7 +373,7 @@ export default {
                 oldQueueTail.next = this.queueTail
             }
             // re-draw
-            this.isTransitting = true
+            this.isTransitting = true // disable the buttons
             this.draw()
             setTimeout(() => {
                 this.isTransitting = false
@@ -395,7 +389,7 @@ export default {
                 this.queueTail = null
             }
             // re-draw
-            this.isTransitting = true
+            this.isTransitting = true // disable the buttons
             this.draw()
             setTimeout(() => {
                 this.isTransitting = false
