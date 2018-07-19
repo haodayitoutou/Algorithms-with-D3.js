@@ -25,7 +25,7 @@ import * as d3 from 'd3'
 
 // svg size
 const SVG_WIDTH = 960
-const SVG_HEIGHT = 900
+const SVG_HEIGHT = 800
 // stack/queue size
 const CONTAINER_WIDTH = 168
 const CONTAINER_HEIGHT = 600
@@ -402,18 +402,6 @@ export default {
 <style lang="scss">
 .linked-list {
     display: flex;
-    rect {
-        fill-opacity: 1e-6;
-        stroke: #2389ae;
-        stroke-width: 2
-    }
-    text {
-        font-size: 20px;
-    }
-    line {
-        stroke: #2389ae;
-        stroke-width: 2
-    }
     .buttons {
         display: flex;
         flex-direction: column;

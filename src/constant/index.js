@@ -12,6 +12,19 @@ const navigator = [
             },
         ],
     },
+    {
+        label: 'Sorting',
+        value: '/sorting',
+        children: [
+            {
+                label: 'Selection Sort',
+                value: {
+                    name: 'SelectionSort',
+                    params: {},
+                },
+            },
+        ],
+    },
 ]
 
 export default navigator

@@ -1,52 +1,23 @@
 <template>
     <div class="home">
-        <div class="menu">
-            <el-menu
-                unique-opened
-                :default-active="$route.path"
-                :router="true"
-            >
-                <el-menu-item
-                    class="menu-main"
-                    :index='"Main"'
-                    :route='"/"'
-                >
-                    Overview
-                </el-menu-item>
-                <el-menu-item-group
-                    v-for="(item, i) in navigator"
-                    :key="i"
-                    :index="item.value"
-                    :route="item.value"
-                >
-                    <template slot="title">
-                        <span>{{ item.label }}</span>
-                    </template>
-                    <el-menu-item
-                        v-for="(child, j) in item.children"
-                        :key="`${i + 1} - ${j + 1}`"
-                        :index="child.value.name"
-                        :route="child.value"
-                    >
-                        {{ child.label }}
-                    </el-menu-item>
-                </el-menu-item-group>
-            </el-menu>
+        <div class="header-wrapper">
+            <t-header></t-header>
         </div>
-        <div class="content">
-            <router-view></router-view>
+        <div class="content-wrapper">
+            <div class="menu-wrapper">
+                <t-menu></t-menu>
+            </div>
+            <div class="content">
+                <router-view></router-view>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
-import navigator from '../constant'
-
 export default {
     data () {
-        return {
-            navigator,
-        }
+        return {}
     },
 }
 </script>
@@ -54,38 +25,45 @@ export default {
 <style lang="scss">
 .home {
     position: relative;
-    margin-top: 80px;
-    margin-left: 100px;
     font-family: Helvetica Neue, Helvetica, PingFang SC, sans-serif;
 }
-.menu {
+.header-wrapper {
     position: fixed;
+    width: 100%;
     top: 0;
+    left: 0;
+    z-index: 1500;
+}
+.content-wrapper {
+    width: 1440px;
+    height: 100%;
+    min-height: auto;
+    margin: 80px auto 0;
+    padding: 0;
+}
+.menu-wrapper {
+    position: fixed;
+    top: 80px;
     bottom: 0;
-    width: 220px;
-    margin-top: 80px;
     border-right: solid 1px #e6e6e6;
-    .el-menu {
-        border-right: none;
-    }
-    .el-menu-item {
-        display: block;
-        height: 40px;
-        line-height: 40px;
-        overflow: hidden;
-        color: #444;
-    }
-    .menu-main {
-        height: 40px;
-        margin-top: 20px;
-        font-size: 16px;
-        font-weight: 700;
-        line-height: 40px;
-        color: #333;
-    }
 }
 .content {
     box-sizing: border-box;
-    padding-left: 250px;
+    padding-left: 240px;
+    svg {
+        border: 1px solid green;
+    }
+    rect {
+        fill-opacity: 1e-6;
+        stroke: #2389ae;
+        stroke-width: 2
+    }
+    text {
+        font-size: 20px;
+    }
+    line {
+        stroke: #2389ae;
+        stroke-width: 2
+    }
 }
 </style>

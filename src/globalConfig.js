@@ -15,7 +15,7 @@ const GlobalConfig = {
         // global component
         Vue.use(ElementUI)
         Object.keys(components).forEach((name) => {
-            Vue.components(name, components[name])
+            Vue.component(name, components[name])
         })
     },
 }

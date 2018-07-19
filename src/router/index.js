@@ -7,6 +7,9 @@ import MainHome from '../views/main/Home'
 import FundamentalsHome from '../views/fundamentals/Home'
 import Fundamentals from './fundamentals'
 
+import SortingHome from '../views/sorting/Home'
+import Sorting from './sorting'
+
 Vue.use(Router)
 
 export default new Router({
@@ -24,6 +27,11 @@ export default new Router({
                     path: 'fundamentals',
                     component: FundamentalsHome,
                     children: Fundamentals,
+                },
+                {
+                    path: 'sorting',
+                    component: SortingHome,
+                    children: Sorting,
                 },
             ],
         },
