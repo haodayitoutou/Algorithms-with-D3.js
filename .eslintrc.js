@@ -49,7 +49,7 @@ module.exports = {
     "arrow-body-style": ["error", "always"],
     "indent": ["error", 4],
     'linebreak-style': 'off',
-    "max-len": ["error", { "code": 120 }],
+    "max-len": ["error", { "code": 160 }],
     "no-console": "off",
     "no-mixed-operators": "off",
     "no-param-reassign": "off",

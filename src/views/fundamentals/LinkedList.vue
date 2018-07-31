@@ -402,6 +402,18 @@ export default {
 <style lang="scss">
 .linked-list {
     display: flex;
+    rect {
+        fill-opacity: 1e-6;
+        stroke: #2389ae;
+        stroke-width: 2
+    }
+    text {
+        font-size: 20px;
+    }
+    line {
+        stroke: #2389ae;
+        stroke-width: 2
+    }
     .buttons {
         display: flex;
         flex-direction: column;
