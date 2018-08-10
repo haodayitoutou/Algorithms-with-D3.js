@@ -248,7 +248,14 @@ export default {
             moveBar(this.svgElement, v2, i1)
         },
         updateComparison ({ vMin, vJ }) {
-            const comparison = vMin < vJ ? '<' : '>'
+            let comparison
+            if (vMin === vJ) {
+                comparison = '='
+            } else if (vMin > vJ) {
+                comparison = '>'
+            } else {
+                comparison = '<'
+            }
             this.svgElement.select('text.minimumText')
                 .text(vMin)
             this.svgElement.select('text.jText')
@@ -267,10 +274,15 @@ export default {
                 if (i > 0) {
                     // put the three arrows to the starting position before a loop begins
                     this.taskQueue.push([
+                        // move bar
                         { type: 'move', className: 'iteratorI', x: i },
                         { type: 'move', className: 'minimum', x: i },
                         // move j here instead of inside the inner loop, so that the three arrows can move simultaneously
                         { type: 'move', className: 'iteratorJ', x: i + 1 },
+                    ])
+                    // update text
+                    this.taskQueue.push([
+                        { type: 'text', vMin: this.dataSet[minimum], vJ: this.dataSet[i + 1] },
                     ])
                 }
                 for (let j = i + 1; j < BAR_COUNT; j += 1) {
@@ -278,11 +290,17 @@ export default {
                         this.taskQueue.push([
                             { type: 'move', className: 'iteratorJ', x: j },
                         ])
+                        this.taskQueue.push([
+                            { type: 'text', vMin: this.dataSet[minimum], vJ: this.dataSet[j] },
+                        ])
                     }
                     if (this.dataSet[j] < this.dataSet[minimum]) { // finds a smaller number
                         minimum = j
                         this.taskQueue.push([
                             { type: 'move', className: 'minimum', x: j },
+                        ])
+                        this.taskQueue.push([
+                            { type: 'text', vMin: this.dataSet[minimum], vJ: this.dataSet[j] },
                         ])
                     }
                 }
@@ -316,6 +334,8 @@ export default {
                     } else if (action.type === 'swap') { // move the bars
                         that.updateBar(action)
                         that.swapCount += 1
+                    } else if (action.type === 'text') { // change the comparison text
+                        that.updateComparison(action)
                     }
                 }
                 setTimeout(() => {
