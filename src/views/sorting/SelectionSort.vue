@@ -155,6 +155,7 @@ export default {
                 .attr('y', (d) => {
                     return BAR_BOTTOM - yScale(d)
                 })
+                .attr('fill-opacity', 1e-6)
 
             barEnter.append('text')
                 .attr('class', 'valueText')
@@ -235,6 +236,9 @@ export default {
             // This function swaps two bars
             // i1, i2 are the index of these two bars in the data set
             // v1, v2 are the corresponding values
+            if (v1 === v2) {
+                return
+            }
             function moveBar (svg, datum, index) {
                 // datum: to find the svg element to move
                 // index: to find the final position for the svg element
@@ -262,6 +266,12 @@ export default {
                 .text(vJ)
             this.svgElement.select('text.comparisonText')
                 .text(comparison)
+        },
+        paintBar ({ datum }) {
+            this.svgElement.selectAll('rect')
+                .filter((d) => { return d === datum })
+                .attr('fill-opacity', 0.6)
+                .attr('fill', 'red')
         },
         handleSort () {
             this.isSorting = true // disable the buttons
@@ -306,22 +316,26 @@ export default {
                 }
                 // After the inner loop is completed, we get the smallest number for this (outer) loop
                 // Move it to its final position
-                if (i !== minimum) {
-                    let v1 = this.dataSet[i]
-                    let v2 = this.dataSet[minimum]
-                    this.dataSet[i] = v2
-                    this.dataSet[minimum] = v1
-                    this.taskQueue.push([ // Add a task to swap their corresponding bars
-                        {
-                            type: 'swap',
-                            i1: i,
-                            i2: minimum,
-                            v1,
-                            v2,
-                        },
-                    ])
-                }
+                let v1 = this.dataSet[i]
+                let v2 = this.dataSet[minimum]
+                this.dataSet[i] = v2
+                this.dataSet[minimum] = v1
+                this.taskQueue.push([ // Add a task to swap their corresponding bars
+                    {
+                        type: 'swap',
+                        i1: i,
+                        i2: minimum,
+                        v1,
+                        v2,
+                    },
+                ])
             }
+            // After the outer loop is completed, move the arrows to their original positions
+            this.taskQueue.push([
+                { type: 'move', className: 'iteratorI', x: 0 },
+                { type: 'move', className: 'minimum', x: 0 },
+                { type: 'move', className: 'iteratorJ', x: 1 },
+            ])
 
             // The sorting is completed. Execute the tasks to the simulate the process
             let that = this
@@ -333,6 +347,7 @@ export default {
                         that.updateArrow(action)
                     } else if (action.type === 'swap') { // move the bars
                         that.updateBar(action)
+                        that.paintBar({ datum: action.v2 })
                         that.swapCount += 1
                     } else if (action.type === 'text') { // change the comparison text
                         that.updateComparison(action)
@@ -368,7 +383,6 @@ export default {
 .selection-sort {
     display: flex;
     rect {
-        fill-opacity: 1e-6;
         stroke: #2389ae;
         stroke-width: 2
     }
