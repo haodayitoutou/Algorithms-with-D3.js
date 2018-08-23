@@ -1,9 +1,9 @@
 <template>
-    <div class="header">
-        <div class="header-container">
+    <el-container class="t-header">
+        <el-col :span="21" :offset="3" class="t-header-row">
             <img :src="icon" alt="icon" @click="handleIconClick">
-        </div>
-    </div>
+        </el-col>
+    </el-container>
 </template>
 
 <script>
@@ -24,24 +24,13 @@ export default {
 </script>
 
 <style lang="scss">
-.header {
-    position: relative;
-    top: 0;
-    left: 0;
-    width: 100%;
+.t-header {
     height: 80px;
-    line-height: 80px;
-    color: #fff;
-    background-color: #fff;
-    z-index: 100;
+    z-index: 1500;
 }
-.header-container {
+.t-header-row {
     display: flex;
     align-items: center;
-    box-sizing: border-box;
-    width: 1440px;
-    height: 100%;
-    margin: 0 auto;
 }
 img {
     height: 50px;

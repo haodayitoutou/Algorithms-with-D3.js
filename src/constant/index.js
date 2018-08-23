@@ -17,9 +17,9 @@ const navigator = [
         value: '/sorting',
         children: [
             {
-                label: 'Selection Sort',
+                label: 'Elementary Sort',
                 value: {
-                    name: 'SelectionSort',
+                    name: 'ElementarySort',
                     params: {},
                 },
             },

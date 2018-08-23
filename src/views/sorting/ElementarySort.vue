@@ -1,26 +1,58 @@
 <template>
     <div class="selection-sort">
-        <svg id="selectionsort"></svg>
-        <div class="buttons">
-            <el-button
-                type="primary"
-                @click="handleSort"
-                :disabled="isSorting"
-            >
-                Sort
-            </el-button>
-            <el-button
-                type="primary"
-                @click="handleShuffle"
-                :disabled="isSorting"
-            >
-                Shuffle
-            </el-button>
-            <div class="notes">
-                Swap count: {{ swapCount }}
-                <ol>
-                    <li v-for="(note, index) in notes" :key="index">{{ note }}</li>
-                </ol>
+        <svg id="elementarysort"></svg>
+        <div class="side-bar">
+            <div class="side-bar-top">
+                <el-button type="primary" @click="handleSelectionSort" :disabled="isSorting || taskQueue.length > 0">
+                    Selection Sort
+                </el-button>
+                <div class="notes">
+                    <span>Swap count: {{ selectionCount }}</span>
+                    <ol>
+                        <li>Running time is insensitive to input</li>
+                        <li>Data movement is minimal: use N exchanges</li>
+                    </ol>
+                </div>
+                <el-button type="primary" @click="handleInsertionSort" :disabled="isSorting || taskQueue.length > 0">
+                    Insertion Sort
+                </el-button>
+                <div class="notes">
+                    <span>Swap count: {{ insertionCount }}</span>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Compare</th>
+                                <th>Exchange</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Random</td>
+                                <td>N<sup>2</sup>/4</td>
+                                <td>N<sup>2</sup>/4</td>
+                            </tr>
+                            <tr>
+                                <td>Worst</td>
+                                <td>N<sup>2</sup>/2</td>
+                                <td>N<sup>2</sup>/2</td>
+                            </tr>
+                            <tr>
+                                <td>Best</td>
+                                <td>N - 1</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="side-bar-bottom">
+                <el-button type="primary" @click="handleStop" :disabled="taskQueue.length === 0">
+                    {{ buttonText }}
+                </el-button>
+                <el-button type="primary" @click="handleShuffle" :disabled="isSorting">
+                    Shuffle
+                </el-button>
             </div>
         </div>
     </div>
@@ -58,11 +90,9 @@ export default {
             isSorting: false,
             svgElement: null,
             taskQueue: [],
-            swapCount: 0,
-            notes: [
-                'Running time is insensitive to input',
-                'Data movement is minimal: use N exchanges',
-            ],
+            selectionCount: 0,
+            insertionCount: 0,
+            buttonText: 'Stop',
         }
     },
     mounted () {
@@ -73,7 +103,7 @@ export default {
     mixins: [drawArrow],
     methods: {
         drawSigns () {
-            this.svgElement = d3.select('#selectionsort')
+            this.svgElement = d3.select('#elementarysort')
                 .attr('width', SVG_WIDTH)
                 .attr('height', SVG_HEIGHT)
 
@@ -273,7 +303,7 @@ export default {
                 .attr('fill-opacity', 0.6)
                 .attr('fill', 'red')
         },
-        handleSort () {
+        handleSelectionSort () {
             this.isSorting = true // disable the buttons
             let minimum
             // loop through the array
@@ -336,25 +366,31 @@ export default {
                 { type: 'move', className: 'minimum', x: 0 },
                 { type: 'move', className: 'iteratorJ', x: 1 },
             ])
+            // Also set the texts
+            this.taskQueue.push([
+                { type: 'text', vMin: this.dataSet[0], vJ: this.dataSet[1] },
+            ])
 
             // The sorting is completed. Execute the tasks to the simulate the process
             let that = this
             function delay () {
-                let actions = that.taskQueue.shift() // get a new action list
-                for (let n = 0; n < actions.length; n += 1) { // there might be multiple actions
-                    let action = actions[n]
-                    if (action.type === 'move') { // move the arrows
-                        that.updateArrow(action)
-                    } else if (action.type === 'swap') { // move the bars
-                        that.updateBar(action)
-                        that.paintBar({ datum: action.v2 })
-                        that.swapCount += 1
-                    } else if (action.type === 'text') { // change the comparison text
-                        that.updateComparison(action)
+                if (that.isSorting) {
+                    let actions = that.taskQueue.shift() // get a new action list
+                    for (let n = 0; n < actions.length; n += 1) { // there might be multiple actions
+                        let action = actions[n]
+                        if (action.type === 'move') { // move the arrows
+                            that.updateArrow(action)
+                        } else if (action.type === 'swap') { // move the bars
+                            that.updateBar(action)
+                            that.paintBar({ datum: action.v2 })
+                            that.selectionCount += 1
+                        } else if (action.type === 'text') { // change the comparison text
+                            that.updateComparison(action)
+                        }
                     }
                 }
                 setTimeout(() => {
-                    if (that.taskQueue.length > 0) { // there are still tasks left
+                    if (that.taskQueue.length > 0) { // there are still tasks left and 'Stop' is not clicked
                         delay() // After a timeout, run this function again to execute the next task
                     } else {
                         that.isSorting = false // All tasks are completed. Enable the buttons
@@ -362,6 +398,11 @@ export default {
                 }, DURATION)
             }
             delay()
+        },
+        handleInsertionSort () {},
+        handleStop () {
+            this.isSorting = !this.isSorting
+            this.buttonText = this.isSorting ? 'Pause' : 'Resume'
         },
         handleShuffle () {
             for (let i = BAR_COUNT - 1; i > 0; i -= 1) {
@@ -382,36 +423,48 @@ export default {
 <style lang="scss">
 .selection-sort {
     display: flex;
-    rect {
-        stroke: #2389ae;
-        stroke-width: 2
+    justify-content: space-between;
+    #elementarysort {
+        min-width: 960px;
     }
-    text {
-        font-size: 20px;
-    }
-    line {
-        stroke: #2389ae;
-        stroke-width: 2
-    }
-    .buttons {
+    .side-bar {
         display: flex;
         flex-direction: column;
-        width: 150px;
-        margin-left: 20px;
-        .el-button {
-            width: 100px;
-            margin-top: 10px;
-            margin-left: 0;
+        justify-content: space-between;
+        margin-left: 40px;
+        .side-bar-top, .side-bar-bottom {
+            display: flex;
+            flex-direction: column;
         }
-        div {
-            margin-top: 20px;
+        .el-button {
+            margin: 20px 0 0;
+            padding: 10px 0;
+            font-size: 20px;
+            line-height: 18px;
+            &:first-child {
+                margin-top: 0;
+            }
         }
         .notes {
+            margin-top: 20px;
             ol {
                 margin: 20px 0 0 20px;
             }
             li {
                 margin-top: 10px;
+                word-wrap: break-all;
+                white-space: normal;
+            }
+            table {
+                margin-top: 20px;
+                table-layout: fixed;
+                border-collapse: collapse;
+                border: 1px solid gray;
+            }
+            th, td {
+                padding: 10px;
+                text-align: center;
+                border: 1px solid gray;
             }
         }
     }

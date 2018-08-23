@@ -1,13 +1,13 @@
-import SelectionSort from '../views/sorting/SelectionSort'
+import ElementarySort from '../views/sorting/ElementarySort'
 
 export default [
     {
         path: '',
-        redirect: 'selectionsort',
+        redirect: 'elementarysort',
     },
     {
-        name: 'SelectionSort',
-        path: 'selectionsort',
-        component: SelectionSort,
+        name: 'ElementarySort',
+        path: 'elementarysort',
+        component: ElementarySort,
     },
 ]
