@@ -306,6 +306,8 @@ export default {
         handleSelectionSort () {
             this.isSorting = true // disable the buttons
             let minimum
+            let v1
+            let v2
             // loop through the array
             for (let i = 0; i < BAR_COUNT; i += 1) {
                 // mark the index of the smallest number in the array
@@ -346,8 +348,8 @@ export default {
                 }
                 // After the inner loop is completed, we get the smallest number for this (outer) loop
                 // Move it to its final position
-                let v1 = this.dataSet[i]
-                let v2 = this.dataSet[minimum]
+                v1 = this.dataSet[i]
+                v2 = this.dataSet[minimum]
                 this.dataSet[i] = v2
                 this.dataSet[minimum] = v1
                 this.taskQueue.push([ // Add a task to swap their corresponding bars
@@ -399,7 +401,34 @@ export default {
             }
             delay()
         },
-        handleInsertionSort () {},
+        handleInsertionSort () {
+            this.svgElement.select('minimum')
+                .attr('display', 'none')
+            this.isSorting = true // disable the buttons
+            let i
+            let j
+            let v1
+            let v2
+            for (i = 0; i < BAR_COUNT; i += 1) {
+                if (i > 0) {
+                    // put the three arrows to the starting position before a loop begins
+                    this.taskQueue.push([
+                        // move bar
+                        { type: 'move', className: 'iteratorI', x: i },
+                        // move j here instead of inside the inner loop, so that the three arrows can move simultaneously
+                        { type: 'move', className: 'iteratorJ', x: i },
+                    ])
+                }
+                for (j = i; j > 0; j -= 1) {
+                    v1 = this.dataSet[j]
+                    v2 = this.dataSet[j - 1]
+                    if (v1 < v2) {
+                        this.dataSet[j] = v2
+                        this.dataSet[j - 1] = v1
+                    }
+                }
+            }
+        },
         handleStop () {
             this.isSorting = !this.isSorting
             this.buttonText = this.isSorting ? 'Pause' : 'Resume'
@@ -415,6 +444,14 @@ export default {
             this.drawBar() // re-draw based on the new data set
             d3.selectAll('g.comparison').remove() // remove comparison texts
             this.drawComparison()
+            // move arrows to their initial positions
+            this.updateArrow({ className: 'iteratorI', x: 0 })
+            this.updateArrow({ className: 'minimum', x: 0 })
+            this.updateArrow({ className: 'iteratorJ', x: 1 })
+            // clear task queue
+            this.taskQueue = []
+            // reset the button text
+            this.buttonText = 'Stop'
         },
     },
 }
