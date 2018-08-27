@@ -96,13 +96,11 @@ export default {
         }
     },
     mounted () {
-        this.drawSigns()
-        this.drawBar()
-        this.drawComparison()
+        this.initSvg()
     },
     mixins: [drawArrow],
     methods: {
-        drawSigns () {
+        initSvg () {
             this.svgElement = d3.select('#elementarysort')
                 .attr('width', SVG_WIDTH)
                 .attr('height', SVG_HEIGHT)
@@ -123,6 +121,7 @@ export default {
                     return BAR_BOTTOM
                 })
 
+            // draw two horizontal lines as bases for the signs
             this.svgElement.append('g')
                 .selectAll('line')
                 .data([11, 13])
@@ -133,33 +132,9 @@ export default {
                 .attr('y1', (d) => { return SVG_HEIGHT * d / 16 })
                 .attr('y2', (d) => { return SVG_HEIGHT * d / 16 })
 
-            function addSign (svg, className, x, y, text, startY, arrowFunc) {
-                let element = svg.append('g')
-                    .attr('class', className)
-                element.append('text')
-                    .attr('x', x)
-                    .attr('y', y)
-                    .attr('dy', 20)
-                    .attr('text-anchor', 'middle')
-                    .text(text)
-                arrowFunc({
-                    element,
-                    startX: 0,
-                    endX: 0,
-                    startY,
-                    endY: startY - ARROW_LENGTH,
-                })
-            }
-            // element for i
-            addSign(this.svgElement, 'iteratorI', 0, SVG_HEIGHT * 13 / 16, 'i', SVG_HEIGHT * 13 / 16, this.drawArrow)
-            // element for min
-            addSign(this.svgElement, 'minimum', 0, SVG_HEIGHT * 11 / 16, 'min', SVG_HEIGHT * 11 / 16, this.drawArrow)
-            // element for j
-            addSign(this.svgElement, 'iteratorJ', 0, SVG_HEIGHT * 11 / 16, 'j', SVG_HEIGHT * 11 / 16, this.drawArrow)
-            // move them to their initial positions
-            this.updateArrow({ className: 'iteratorI', x: 0 })
-            this.updateArrow({ className: 'minimum', x: 0 })
-            this.updateArrow({ className: 'iteratorJ', x: 1 })
+            this.drawBar()
+            this.drawSigns()
+            this.drawComparison()
         },
         drawBar () {
             let bar = this.svgElement.selectAll('svg.bar')
@@ -197,52 +172,80 @@ export default {
                 })
                 .attr('dy', -6)
         },
+        drawSigns () {
+            function addSign (svg, className, x, y, text, startY, arrowFunc) {
+                let element = svg.append('g')
+                    .attr('class', className)
+                element.append('text')
+                    .attr('x', x)
+                    .attr('y', y)
+                    .attr('dy', 20)
+                    .attr('text-anchor', 'middle')
+                    .text(text)
+                arrowFunc({
+                    element,
+                    startX: 0,
+                    endX: 0,
+                    startY,
+                    endY: startY - ARROW_LENGTH,
+                })
+            }
+            // element for i
+            addSign(this.svgElement, 'iteratorI', 0, SVG_HEIGHT * 13 / 16, 'i', SVG_HEIGHT * 13 / 16, this.drawArrow)
+            // element for min
+            addSign(this.svgElement, 'minimum', 0, SVG_HEIGHT * 11 / 16, 'min', SVG_HEIGHT * 11 / 16, this.drawArrow)
+            // element for j
+            addSign(this.svgElement, 'iteratorJ', 0, SVG_HEIGHT * 11 / 16, 'j', SVG_HEIGHT * 11 / 16, this.drawArrow)
+            // hide these 3 signs
+            this.toggleSigns({ className: 'iteratorI', opacity: 0 })
+            this.toggleSigns({ className: 'minimum', opacity: 0 })
+            this.toggleSigns({ className: 'iteratorJ', opacity: 0 })
+        },
         drawComparison () {
             /*
-             * Add some texts showing the comparison between minimum and j
+             * Add some texts showing the comparison between two elements
              * They should look like the following:
-             * minimum     j
-             *    vmin  >  vj
+             *   left     right
+             *  vleft  >  vright
              */
-            let initialMin = this.dataSet[0]
-            let initialJ = this.dataSet[1]
-            let comparison = initialMin < initialJ ? '<' : '>'
             let dx = 20
             let dy = '1.5em'
             let compareElement = this.svgElement.append('g')
                 .attr('class', 'comparison')
 
-            // minimum on the left
+            // text on the left
             compareElement.append('text')
+                .attr('class', 'leftText')
                 .attr('x', SVG_WIDTH / 2)
                 .attr('y', SVG_HEIGHT * 15 / 16)
                 .attr('text-anchor', 'end')
                 .attr('dx', -dx)
-                .text('minimum')
+                .text('')
             compareElement.append('text')
-                .attr('class', 'minimumText')
+                .attr('class', 'leftNumber')
                 .attr('x', SVG_WIDTH / 2)
                 .attr('y', SVG_HEIGHT * 15 / 16)
                 .attr('text-anchor', 'end')
                 .attr('dx', -dx)
                 .attr('dy', dy)
-                .text(`${initialMin}`)
+                .text('')
 
-            // j on the right
+            // text on the right
             compareElement.append('text')
+                .attr('class', 'rightText')
                 .attr('x', SVG_WIDTH / 2)
                 .attr('y', SVG_HEIGHT * 15 / 16)
                 .attr('text-anchor', 'start')
                 .attr('dx', dx)
-                .text('j')
+                .text('')
             compareElement.append('text')
-                .attr('class', 'jText')
+                .attr('class', 'rightNumber')
                 .attr('x', SVG_WIDTH / 2)
                 .attr('y', SVG_HEIGHT * 15 / 16)
                 .attr('text-anchor', 'start')
                 .attr('dx', dx)
                 .attr('dy', dy)
-                .text(`${initialJ}`)
+                .text('')
 
             // < or > in the middle
             compareElement.append('text')
@@ -251,7 +254,7 @@ export default {
                 .attr('y', SVG_HEIGHT * 15 / 16)
                 .attr('text-anchor', 'middle')
                 .attr('dy', dy)
-                .text(`${comparison}`)
+                .text('')
         },
         updateArrow ({ className, x }) {
             // This function moves an arrow (with the text above it) to a new position
@@ -281,19 +284,19 @@ export default {
             moveBar(this.svgElement, v1, i2)
             moveBar(this.svgElement, v2, i1)
         },
-        updateComparison ({ vMin, vJ }) {
+        updateComparison ({ vLeft, vRight }) {
             let comparison
-            if (vMin === vJ) {
+            if (vLeft === vRight) {
                 comparison = '='
-            } else if (vMin > vJ) {
+            } else if (vLeft > vRight) {
                 comparison = '>'
             } else {
                 comparison = '<'
             }
-            this.svgElement.select('text.minimumText')
-                .text(vMin)
-            this.svgElement.select('text.jText')
-                .text(vJ)
+            this.svgElement.select('text.leftNumber')
+                .text(vLeft)
+            this.svgElement.select('text.rightNumber')
+                .text(vRight)
             this.svgElement.select('text.comparisonText')
                 .text(comparison)
         },
@@ -303,7 +306,30 @@ export default {
                 .attr('fill-opacity', 0.6)
                 .attr('fill', 'red')
         },
+        toggleSigns ({ className, opacity }) {
+            let g = this.svgElement.select(`g.${className}`)
+            g.select('text').attr('opacity', opacity)
+            g.selectAll('line').attr('opacity', opacity)
+        },
+        resetSvg () {
+            d3.selectAll('svg.bar').remove() // remove all bars
+            this.drawBar() // re-draw based on the new data set
+            d3.selectAll('g.iteratorI').remove() // remove i
+            d3.selectAll('g.minimum').remove() // remove minimum
+            d3.selectAll('g.iteratorJ').remove() // remove j
+            this.drawSigns()
+            d3.selectAll('g.comparison').remove() // remove comparison texts
+            this.drawComparison()
+        },
         handleSelectionSort () {
+            this.svgElement.select('text.leftText').text('minimum')
+            this.svgElement.select('text.rightText').text('j')
+
+            // show the three signs
+            this.toggleSigns({ className: 'iteratorI', opacity: 1 })
+            this.toggleSigns({ className: 'minimum', opacity: 1 })
+            this.toggleSigns({ className: 'iteratorJ', opacity: 1 })
+
             this.isSorting = true // disable the buttons
             let minimum
             let v1
@@ -312,28 +338,25 @@ export default {
             for (let i = 0; i < BAR_COUNT; i += 1) {
                 // mark the index of the smallest number in the array
                 minimum = i
-                // The three arrows are already in the right positions for the first loop, so skip this task
-                if (i > 0) {
-                    // put the three arrows to the starting position before a loop begins
-                    this.taskQueue.push([
-                        // move bar
-                        { type: 'move', className: 'iteratorI', x: i },
-                        { type: 'move', className: 'minimum', x: i },
-                        // move j here instead of inside the inner loop, so that the three arrows can move simultaneously
-                        { type: 'move', className: 'iteratorJ', x: i + 1 },
-                    ])
-                    // update text
-                    this.taskQueue.push([
-                        { type: 'text', vMin: this.dataSet[minimum], vJ: this.dataSet[i + 1] },
-                    ])
-                }
+                // put the three arrows to the starting position before a loop begins
+                this.taskQueue.push([
+                    // move bar
+                    { type: 'move', className: 'iteratorI', x: i },
+                    { type: 'move', className: 'minimum', x: i },
+                    // move j here instead of inside the inner loop, so that the three arrows can move simultaneously
+                    { type: 'move', className: 'iteratorJ', x: i + 1 },
+                ])
+                // update text
+                this.taskQueue.push([
+                    { type: 'text', vLeft: this.dataSet[minimum], vRight: this.dataSet[i + 1] },
+                ])
                 for (let j = i + 1; j < BAR_COUNT; j += 1) {
                     if (j > i + 1) { // the task for (j = i + 1) has already been added before the inner loop begins
                         this.taskQueue.push([
                             { type: 'move', className: 'iteratorJ', x: j },
                         ])
                         this.taskQueue.push([
-                            { type: 'text', vMin: this.dataSet[minimum], vJ: this.dataSet[j] },
+                            { type: 'text', vLeft: this.dataSet[minimum], vRight: this.dataSet[j] },
                         ])
                     }
                     if (this.dataSet[j] < this.dataSet[minimum]) { // finds a smaller number
@@ -342,7 +365,7 @@ export default {
                             { type: 'move', className: 'minimum', x: j },
                         ])
                         this.taskQueue.push([
-                            { type: 'text', vMin: this.dataSet[minimum], vJ: this.dataSet[j] },
+                            { type: 'text', vLeft: this.dataSet[minimum], vRight: this.dataSet[j] },
                         ])
                     }
                 }
@@ -362,16 +385,6 @@ export default {
                     },
                 ])
             }
-            // After the outer loop is completed, move the arrows to their original positions
-            this.taskQueue.push([
-                { type: 'move', className: 'iteratorI', x: 0 },
-                { type: 'move', className: 'minimum', x: 0 },
-                { type: 'move', className: 'iteratorJ', x: 1 },
-            ])
-            // Also set the texts
-            this.taskQueue.push([
-                { type: 'text', vMin: this.dataSet[0], vJ: this.dataSet[1] },
-            ])
 
             // The sorting is completed. Execute the tasks to the simulate the process
             let that = this
@@ -395,6 +408,7 @@ export default {
                     if (that.taskQueue.length > 0) { // there are still tasks left and 'Stop' is not clicked
                         delay() // After a timeout, run this function again to execute the next task
                     } else {
+                        that.resetSvg()
                         that.isSorting = false // All tasks are completed. Enable the buttons
                     }
                 }, DURATION)
@@ -402,8 +416,13 @@ export default {
             delay()
         },
         handleInsertionSort () {
-            this.svgElement.select('minimum')
-                .attr('display', 'none')
+            this.svgElement.select('text.leftText').text('i')
+            this.svgElement.select('text.rightText').text('j')
+
+            // show the signs for i and j
+            this.toggleSigns({ className: 'iteratorI', opacity: 1 })
+            this.toggleSigns({ className: 'iteratorJ', opacity: 1 })
+
             this.isSorting = true // disable the buttons
             let i
             let j
@@ -428,6 +447,35 @@ export default {
                     }
                 }
             }
+
+            // The sorting is completed. Execute the tasks to the simulate the process
+            let that = this
+            function delay () {
+                if (that.isSorting) {
+                    let actions = that.taskQueue.shift() // get a new action list
+                    for (let n = 0; n < actions.length; n += 1) { // there might be multiple actions
+                        let action = actions[n]
+                        if (action.type === 'move') { // move the arrows
+                            that.updateArrow(action)
+                        } else if (action.type === 'swap') { // move the bars
+                            that.updateBar(action)
+                            that.paintBar({ datum: action.v2 })
+                            that.insertionCount += 1
+                        } else if (action.type === 'text') { // change the comparison text
+                            that.updateComparison(action)
+                        }
+                    }
+                }
+                setTimeout(() => {
+                    if (that.taskQueue.length > 0) { // there are still tasks left and 'Stop' is not clicked
+                        delay() // After a timeout, run this function again to execute the next task
+                    } else {
+                        that.resetSvg()
+                        that.isSorting = false // All tasks are completed. Enable the buttons
+                    }
+                }, DURATION)
+            }
+            delay()
         },
         handleStop () {
             this.isSorting = !this.isSorting
@@ -440,14 +488,7 @@ export default {
                 this.dataSet[i] = this.dataSet[j]
                 this.dataSet[j] = temp
             }
-            d3.selectAll('svg.bar').remove() // remove all bars
-            this.drawBar() // re-draw based on the new data set
-            d3.selectAll('g.comparison').remove() // remove comparison texts
-            this.drawComparison()
-            // move arrows to their initial positions
-            this.updateArrow({ className: 'iteratorI', x: 0 })
-            this.updateArrow({ className: 'minimum', x: 0 })
-            this.updateArrow({ className: 'iteratorJ', x: 1 })
+            this.resetSvg()
             // clear task queue
             this.taskQueue = []
             // reset the button text
